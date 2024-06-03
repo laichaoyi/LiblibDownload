@@ -36,9 +36,9 @@ def get_unique_values(table_name, column_name):
     cursor.execute(f"SELECT DISTINCT {column_name} FROM {table_name}")
     values = [row[0] for row in cursor.fetchall()]
     conn.close()
-    values.insert(0, "All")
+    values.insert(0, "Tất cả")
     if table_name == "tag":
-        values.insert(1, "None")
+        values.insert(1, "Không xác định")
     return values
 
 
@@ -60,12 +60,12 @@ def query_data_task(combobox_vars, root, page=1, page_size=100):
         values[label] = var.get()
         print(f"{label} {var.get()}")
 
-    model_type = values["Model Type:"]
-    base_type = values["Base Type:"]
-    category = values["Catetory:"]
-    older_than = int(values["Older than (days):"])
-    num_of_downloads = int(values["Num of downloads:"])
-    contain_text = values["Contain text:"]
+    model_type = values["Loai model:"]
+    base_type = values["Phien ban model:"]
+    category = values["Chu de:"]
+    older_than = int(values["Cu hon (ngay):"])
+    num_of_downloads = int(values["So luong tai:"])
+    contain_text = values["Chua noi dung:"]
 
     # 连接数据库并查询
     conn = sqlite3.connect(db_file)
@@ -74,15 +74,15 @@ def query_data_task(combobox_vars, root, page=1, page_size=100):
     # 构建查询条件
     conditions = []
     params = []
-    if model_type != "All":
+    if model_type != "Tất cả":
         conditions.append("model.type_name = ?")
         params.append(model_type)
 
-    if base_type != "All":
+    if base_type != "Tất cả":
         conditions.append("model.base_type_name = ?")
         params.append(base_type)
 
-    if category != "All":
+    if category != "Tất cả":
         conditions.append("model.tags LIKE ?")
         if category == "None":
             params.append("[]")
@@ -115,8 +115,8 @@ def query_data_task(combobox_vars, root, page=1, page_size=100):
     model_uuids = list(dict.fromkeys(model_uuids))
     version_ids = list(dict.fromkeys(version_ids))
 
-    print(f"有{len(model_uuids)}个uuid")
-    print(f"有{len(version_ids)}个version id")
+    print(f"Có{len(model_uuids)}个uuid")
+    print(f"Có{len(version_ids)}个version id")
 
     global files_to_download
     files_to_download = version_ids
@@ -125,20 +125,20 @@ def query_data_task(combobox_vars, root, page=1, page_size=100):
     # max_page = tk.IntVar()
     # max_page.set(len(model_uuids) / page_size + 1)
 
-    button2.config(text=f"下载全部版本")
+    button2.config(text=f"Tải xuống tất cả")
 
     # if len(model_uuids) >= 100:
     #     label_msg.config(
-    #         text=f"共有{len(model_uuids)}个模型的{len(files_to_download)}个版本，只显示前{page_size}条。"
+    #         text=f"Tổng cộng có {len(model_uuids)}model {len(files_to_download)}个版本，只显示前{page_size} mục。"
     #     )
     # else:
     label_msg.config(
-        text=f"共有{len(model_uuids)}个模型的{len(files_to_download)}个版本，每页最多{page_size}条。"
+        text=f"Tổng cộng: {len(model_uuids)} model {len(files_to_download)} các loại, hiển thị mỗi trang {page_size} mục。"
     )
 
     total_pages = int(len(model_uuids) / page_size + 1)
-    print(f"共有{total_pages}页")
-    label_paging.config(text=f"共有{total_pages}页，选择页数：")
+    print(f"Tổng cộng {total_pages} trang")
+    label_paging.config(text=f"Tổng cộng có {total_pages} trang，Chọn trang số：")
 
     pages = [page1 for page1 in range(1, total_pages + 1)]
     combo_paging["values"] = pages
@@ -178,7 +178,7 @@ def query_data_task(combobox_vars, root, page=1, page_size=100):
 def on_page_selected(combobox_vars, root):
     combo_paging = root.nametowidget(".middle.tree_frame.paging_frame.combo_paging")
     selected_page = combo_paging.get()
-    print(f"选择了第{selected_page}页")
+    print(f"Đã chọn {selected_page} trang")
     query_data(combobox_vars, root, int(selected_page))
     
     
@@ -193,7 +193,7 @@ def on_tree_select(root, event):
         item_data = event.widget.item(item_id)  # 获取选中行的数据
         uuid = item_data["text"]  # 获取标签（tag）中的uuid
         selected_uuids.append(uuid)
-        print(f"选中的行数据: {item_data['values']}, UUID: {uuid}")
+        print(f"Dòng dữ liệu đã chọn: {item_data['values']}, UUID: {uuid}")
 
     conn = sqlite3.connect(db_file)
     cursor = conn.cursor()
@@ -210,9 +210,9 @@ def on_tree_select(root, event):
     global files_to_download
     files_to_download = [result[0] for result in results]
     label_msg.config(
-        text=f"当前选中{len(selected_items)}个模型的{len(files_to_download)}个版本。"
+        text=f"Đang chọn{len(selected_items)}của 1 model{len(files_to_download)}phiên bản。"
     )
-    button2.config(text=f"下载所有选中的")
+    button2.config(text=f"Tải xuống hết model đã chọn")
 
 
 def query_data(combobox_vars, root, page=1):
@@ -220,7 +220,7 @@ def query_data(combobox_vars, root, page=1):
     button2.config(state=tk.NORMAL)
 
     label_msg = root.nametowidget(".bottom.label_msg")
-    label_msg.config(text="正在查询……")
+    label_msg.config(text="đang truy vấn……")
 
     tree = root.nametowidget(".middle.tree_frame.tree")
     threading.Thread(
@@ -257,7 +257,7 @@ async def download_other_files(
         desc_file.write(version_desc + "\n")
 
     if os.path.exists(cover_image_file_path):
-        print(f"文件 {cover_image_file_path} 已存在，跳过下载。")
+        print(f"tài liệu {cover_image_file_path} đã tồn tại, hủy tải xuống。")
         return
 
     # 构造aria2c命令
@@ -290,11 +290,11 @@ async def download_model_file(root, url, file_path, total_files):
     label_msg = root.nametowidget(".bottom.label_msg")
 
     if os.path.exists(file_path):
-        print(f"文件 {file_path} 已存在，跳过下载。")
+        print(f"Tệp {file_path} đã tồn tại, hủy tải xuống。")
 
         global_num_of_files_to_download += 1
         label_msg.config(
-            text=f"第{global_num_of_files_to_download}/{total_files}个文件下载已完成"
+            text=f"Số tệp: {global_num_of_files_to_download}/{total_files}đã tải xong"
         )
         global_progress_var.set(global_num_of_files_to_download / total_files * 100)
         return
@@ -328,7 +328,7 @@ async def download_model_file(root, url, file_path, total_files):
         # 更新进度条
         global_num_of_files_to_download += 1
         label_msg.config(
-            text=f"第{global_num_of_files_to_download}/{total_files}个文件下载已完成"
+            text=f"Số tệp:{global_num_of_files_to_download}/{total_files}đã tải xong"
         )
         global_progress_var.set(global_num_of_files_to_download / total_files * 100)
     else:
@@ -340,7 +340,7 @@ async def download(root):
     global files_to_download
     global global_progress_var
     global global_num_of_files_to_download
-    print(f"有{len(files_to_download)}个文件等待下载")
+    print(f"Số tệp:{len(files_to_download)}đang chờ tải xuống")
     global_progress_var.set(0)
     global_num_of_files_to_download = 0
 
@@ -350,7 +350,7 @@ async def download(root):
     label_msg = root.nametowidget(".bottom.label_msg")
     # progress_bar = root.nametowidget(".bottom.progress_bar")
     # global_progress_var = progress_bar['variable']  # 设置全局进度条变量
-    label_msg.config(text=f"开始下载{len(files_to_download)}个文件")
+    label_msg.config(text=f"Bắt đầu Tải về {len(files_to_download)} các tệp")
 
     tasks = []
 
@@ -417,7 +417,7 @@ async def download(root):
 
     await asyncio.gather(*tasks)
 
-    label_msg.config(text="下载完成！")
+    label_msg.config(text="Đã tải xong！")
 
 
 # 创建UI
@@ -453,12 +453,12 @@ def create_ui():
 
     # 定义控件数据，用于创建 Label 和 Combobox
     controls = [
-        ("Model Type:", get_unique_values("model", "type_name"), True),
-        ("Older than (days):", [0, 7, 14, 30, 90, 180, 365], False),
-        ("Base Type:", get_unique_values("model", "base_type_name"), True),
-        ("Num of downloads:", [0, 50, 100, 500, 1000, 5000, 10000], False),
-        ("Catetory:", get_unique_values("tag", "name"), True),
-        ("Contain text:", "", False)
+        ("Loai model:", get_unique_values("model", "type_name"), True),
+        ("Cu hon (ngay):", [0, 7, 14, 30, 90, 180, 365], False),
+        ("Phien ban model:", get_unique_values("model", "base_type_name"), True),
+        ("So luong tai:", [0, 50, 100, 500, 1000, 5000, 10000], False),
+        ("Chu de:", get_unique_values("tag", "name"), True),
+        ("Chua noi dung:", "", False)
     ]
 
     combobox_vars = {}
@@ -506,14 +506,14 @@ def create_ui():
 
     button1 = ttk.Button(
         button_frame,
-        text="查询",
+        text="Truy vấn",
         command=lambda: query_data(combobox_vars, root),
         name="query_button",
     )
     button1.pack(side="left", padx=10)
     button2 = ttk.Button(
         button_frame,
-        text="下载",
+        text="Tải xuống",
         command=lambda: start_async_download(root),
         name="download_button",
     )
@@ -529,10 +529,10 @@ def create_ui():
         name="tree",
     )
     # 定义列
-    tree.heading("Name", text="Name")
-    tree.heading("Author", text="Author")
-    tree.heading("Type", text="Type")
-    tree.heading("Base", text="Base")
+    tree.heading("Name", text="Tên model")
+    tree.heading("Author", text="Tác giả")
+    tree.heading("Type", text="Loại")
+    tree.heading("Base", text="Phiên bản")
     # 设置列的宽度
     tree.column("Name", width=220)
     tree.column("Author", width=80)
@@ -548,7 +548,7 @@ def create_ui():
     # button_next.pack(side="right", padx=2)
 
     label_paging = ttk.Label(
-        button_frame2, anchor="w", text=f"共有0页，选择分页：", name="label_paging"
+        button_frame2, anchor="w", text=f"Tổng cộng có 0 trang, chọn phân trang：", name="label_paging"
     )
     label_paging.pack(side="left", padx=2)
     # var = tk.StringVar()
