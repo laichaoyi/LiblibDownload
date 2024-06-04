@@ -1,4 +1,4 @@
-# LiblibDownload
+# LiblibDownload (updated 04 June, 2024)
 传闻说哩布哩布即将关闭免费下载模型，那就赶紧写个脚本来下载吧。
 用得上的话右上角给点个星星:D
 
